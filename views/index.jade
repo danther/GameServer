@@ -20,25 +20,66 @@ html
 
       var socketFunction;
       $(document).ready(function () {
-        socketFunction = connect();
+        socketFunction = new connect();
       });
 
-      function sendMSG() {
-        //var options = $("#chatOptions").selectedIndex().value;
-        //var msg_toSend = JSON.stringify({command: 'play', arg1: idMatch, arg2: 'testClient38'});
-        //ws.send(msg_toSend);
-        //alert(options);
+      function reset(){
+        socketFunction.closeConnection();
+        //$("#chatArea").val('');
+        //$("#chatInput").val('');
+        socketFunction = new connect();
+      }
+
+      var logged = false;
+      function sendLogin(option){
+        if ($("#chatInput").val().length <= 2){
+          writeMSG('system', 'Username too short');
+        }else if (!logged){
+          var msg_toSend = JSON.stringify({command: option, arg1: idMatch, arg2: $("#chatInput").val()})
+          socketFunction.sendMSG(msg_toSend);
+        }else{
+          writeMSG('system', 'Already logged');
+        }
+        $("#chatInput").val('');
+      }
+
+      function sendChat(option){
+        if ($("#chatInput").val().length <= 1){
+          writeMSG('system', 'Message too short');
+        }else{
+          var msg_toSend = JSON.stringify({command: option, arg1: $("#chatInput").val()})
+          socketFunction.sendMSG(msg_toSend);
+        }
+        $("#chatInput").val('');
+      }
+
+      function sendClose(option){
+        var msg_toSend = JSON.stringify({command: option})
+        socketFunction.sendMSG(msg_toSend);
+        $("#chatInput").val('');
+      }
+
+      function parseMSG() {
+        var option = $( "#chatOptions option:selected" ).text();
+        option = option.toString().toLowerCase();
+
+        switch (option){
+          case "login": sendLogin(option); break;
+          case "chat": sendChat(option); break;
+          case "close": sendClose(option); break;
+          default: break;
+        }
       }
 
       function connect(){
-        var ws = new WebSocket("ws://localhost:3000/", 'test-creatematch' );
+        var ws = new WebSocket("ws://localhost:3000/", 'playgame' );
 
         this.sendMSG = function sendMSG(msg){
           ws.send(msg);
         }
 
         ws.onopen = function(){
-          writeMSG('system', 'Conexion iniciada');
+          writeMSG('system', 'Conection established');
         };
         ws.onmessage = function (evt){
           var msgParsed = JSON.parse(evt.data);
@@ -53,6 +94,13 @@ html
         ws.onclose = function(){
           writeMSG('system', 'Connection closed');
         };
+
+        this.closeConnection = function closeConnection(){
+          ws.removeEventListener("open", ws.onopen);
+          ws.removeEventListener("message", ws.onmessage);
+          ws.removeEventListener("close", ws.onclose);
+          ws.close();
+        }
 
       }
 
@@ -69,11 +117,12 @@ body
     textarea#chatArea(class='textArea' rows='12' cols='100' readonly style={resize: 'none'})
     br
 
-    input#chatInput(type='textbox' style={width: '40em', clear: 'both'})
+    input#chatInput(type='textbox' style={width: '35em', clear: 'both', margin: '0em 1em'})
 
     select#chatOptions(style={clear: 'both', margin: '2em 1em'})
-      - var optionsAvaible = ["Login", "Chat"];
+      - var optionsAvaible = ["Login", "Chat", "Close"];
       for item in optionsAvaible
         option(value= item) #{item}
 
-    button#chatButton(type='button' style={clear: 'both'} onclick='sendMSG()') Envia
+    button#chatButton(type='button' style={clear: 'both', margin: '0em 1em'} onclick='parseMSG()') Send
+    button#chatButton(type='button' style={clear: 'both', margin: '1em 1em'} onclick='reset()') Reset

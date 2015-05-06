@@ -3,11 +3,12 @@
  */
 
 
-function createClient(connection, idClient){
+function createClient(connection, idClient, match){
 
     var connection = connection;
     var idClient = idClient;
     var clientState= "connected";
+    var myMatch = match;
 
     connection.removeAllListeners();
 
@@ -29,14 +30,20 @@ function createClient(connection, idClient){
 
     function stateConnected(message){
         var jsonMessage = JSON.parse(message.utf8Data);
-
-        if (jsonMessage.command == "responde"){
-            var response = JSON.stringify({ response: 'identifier', arg1: idClient});
-            connection.sendUTF(response);
-        } else {
-            var response = JSON.stringify({response: 'error'});
-            connection.sendUTF(response);
+        switch(jsonMessage.command){
+            case "chat": myMatch.broadcastMSG(JSON.stringify({ response: jsonMessage.arg1, msgID: idClient})); break;
+            case "close": myMatch.broadcastMSG(JSON.stringify({ response: idClient + ' left the match'}));
+                connection.close(); break;
+            default: connection.sendUTF(JSON.stringify({response: 'error'})); break;
         }
+    }
+
+    this.sendMSGClient = function(msg){
+        connection.sendUTF(msg);
+    }
+
+    this.forceClose = function(){
+        connection.close();
     }
 
 }

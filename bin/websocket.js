@@ -7,7 +7,7 @@ var WebSocketServer = require('websocket').server;
 var matchMain = require('./match.js');
 var clientMain = require('./client.js');
 
-var matchesMap = {};
+var matchesMap = [];
 
 function createWS(server) {
     wsServer = new WebSocketServer({
@@ -18,8 +18,8 @@ function createWS(server) {
 
     wsServer.on('request', function (r) {
         switch (r.requestedProtocols.toString()) {
-            case "test-creatematch": createMatchProtocol(r); break;
-            case "test-playgame": playGameProtocol(r); break;
+            case "creatematch": createMatchProtocol(r); break;
+            case "playgame": playGameProtocol(r); break;
             default: r.reject(); console.log((new Date()) + ' Connection Rejected. Format unrecognized');
         }
     });
@@ -27,7 +27,7 @@ function createWS(server) {
 
 function createMatchProtocol(r){
     try {
-        var connection = r.accept('test-creatematch', r.origin);
+        var connection = r.accept('creatematch', r.origin);
         console.log((new Date()) + ' Lobby ' + connection.remoteAddress + ' Connection accepted');
 
         connection.on('message', function (message) {
@@ -47,7 +47,14 @@ function createMatchProtocol(r){
                         var response = JSON.stringify({response: 'error'});
                         connection.sendUTF(response);
                     }
-                } else {
+                } else if (jsonMessage.command == "closeall") {
+                    for (var mtc in matchesMap){
+                        matchesMap[mtc].closeAll();
+                    }
+                    matchesMap = matchesMap.splice(0, matchesMap.length);
+                    var response = JSON.stringify({response: 'Matches closed'});
+                    connection.sendUTF(response);
+                }else{
                     var response = JSON.stringify({response: 'error'});
                     connection.sendUTF(response);
                 }
@@ -71,18 +78,20 @@ function createMatchProtocol(r){
 
 function playGameProtocol(r){
     try {
-        var connection = r.accept('test-playgame', r.origin);
+        var connection = r.accept('playgame', r.origin);
         console.log((new Date()) + ' Client ' + connection.remoteAddress + ' Connection accepted');
 
         connection.on('message', function (message) {
             var jsonMessage = JSON.parse(message.utf8Data);
 
-            if (jsonMessage.command == "play"){
+            if (jsonMessage.command == "login"){
                 var specMatch = matchesMap[jsonMessage.arg1];
                 var clientID = jsonMessage.arg2;
                 if (specMatch != undefined && clientID != undefined){
-                    var client = new clientMain(connection, clientID);
+                    var client = new clientMain(connection, clientID, specMatch);
                     specMatch.addClient(connection, client, clientID);
+                    var msg_toBroadcast = JSON.stringify({response: clientID + ' has logged in'});
+                    specMatch.broadcastMSG(msg_toBroadcast);
                 }else{
                     var response = JSON.stringify({ response: 'error'});
                     connection.sendUTF(response);

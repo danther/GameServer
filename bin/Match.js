@@ -14,7 +14,7 @@ app.use(bodyParser.json());
 function createMatch(matchID){
     var matchState = "created";
     var matchID = matchID;
-    var clientsMap = {};
+    var clientsList = [];
     var slots = 4;
 
     function stateMachine(message){
@@ -27,18 +27,31 @@ function createMatch(matchID){
     this.addClient = function(connection, client, clientID){
         if (slots > 0){
             slots--;
-            if (clientsMap[clientID] == undefined){
-                clientsMap[clientID] = client;
+            if (clientsList[clientID] == undefined){
+                clientsList[clientID] = client;
                 if (slots == 0){
                     state = "slotsFull";
                 }
             }else{
-                var response = JSON.stringify({ response: 'Client ID already in use. Ur cheating?'});
+                var response = JSON.stringify({ response: 'Client ID already in use.'});
                 connection.sendUTF(response);
             }
         }else{
             var response = JSON.stringify({ response: 'Match Full'});
             connection.sendUTF(response);
+            connection.close();
+        }
+    }
+
+    this.broadcastMSG = function(msg){
+        for (var clt in clientsList){
+            clientsList[clt].sendMSGClient(msg);
+        }
+    }
+
+    this.closeAll = function (){
+        for (clt in clientsList){
+            clientsList[clt].forceClose();
         }
     }
 
