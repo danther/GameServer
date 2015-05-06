@@ -25,8 +25,8 @@ html
 
       function reset(){
         socketFunction.closeConnection();
-        //$("#chatArea").val('');
-        //$("#chatInput").val('');
+        $("#chatArea").val('');
+        $("#chatInput").val('');
         socketFunction = new connect();
       }
 
@@ -72,7 +72,7 @@ html
       }
 
       function connect(){
-        var ws = new WebSocket("ws://game05dad.azurewebsites.net:3000/", 'playgame' );
+        var ws = new WebSocket("ws://game05dad.azurewebsites.net:80/", 'playgame' );
 
         this.sendMSG = function sendMSG(msg){
           ws.send(msg);
