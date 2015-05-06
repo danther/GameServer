@@ -72,7 +72,7 @@ html
       }
 
       function connect(){
-        var ws = new WebSocket("ws://game05dad.azurewebsites.net:80/", 'playgame' );
+        var ws = new WebSocket("ws://localhost:3000/", 'playgame' );
 
         this.sendMSG = function sendMSG(msg){
           ws.send(msg);
