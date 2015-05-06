@@ -1,5 +1,79 @@
-extends layout
+doctype html
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/style.css')
 
-block content
+    script(type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js').
+
+    script(type='text/javascript').
+
+      var idMatch = getUrlVars()["idMatch"];
+
+      function getUrlVars() {
+        var vars = {};
+        var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+          vars[key] = value;
+        });
+        return vars;
+      }
+
+      var socketFunction;
+      $(document).ready(function () {
+        socketFunction = connect();
+      });
+
+      function sendMSG() {
+        //var options = $("#chatOptions").selectedIndex().value;
+        //var msg_toSend = JSON.stringify({command: 'play', arg1: idMatch, arg2: 'testClient38'});
+        //ws.send(msg_toSend);
+        //alert(options);
+      }
+
+      function connect(){
+        var ws = new WebSocket("ws://localhost:3000/", 'test-creatematch' );
+
+        this.sendMSG = function sendMSG(msg){
+          ws.send(msg);
+        }
+
+        ws.onopen = function(){
+          writeMSG('system', 'Conexion iniciada');
+        };
+        ws.onmessage = function (evt){
+          var msgParsed = JSON.parse(evt.data);
+          if (msgParsed.response == undefined){
+            writeMSG('system', 'Error on message');
+          }else if (msgParsed.msgID != undefined){
+            writeMSG(msgParsed.msgID, msgParsed.response);
+          }else{
+            writeMSG('server', msgParsed.response);
+          }
+        };
+        ws.onclose = function(){
+          writeMSG('system', 'Connection closed');
+        };
+
+      }
+
+      function writeMSG(sender, text){
+        $("#chatArea").val($("#chatArea").val() + sender + ' : ' + text + '\n');
+      }
+
+body
   h1= title
-  p Pagina web del juego
+  p Cliente web del juego
+
+  #container.textbox
+
+    textarea#chatArea(class='textArea' rows='12' cols='100' readonly style={resize: 'none'})
+    br
+
+    input#chatInput(type='textbox' style={width: '40em', clear: 'both'})
+
+    select#chatOptions(style={clear: 'both', margin: '2em 1em'})
+      - var optionsAvaible = ["Login", "Chat"];
+      for item in optionsAvaible
+        option(value= item) #{item}
+
+    button#chatButton(type='button' style={clear: 'both'} onclick='sendMSG()') Envia

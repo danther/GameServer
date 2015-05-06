@@ -6,51 +6,40 @@ var express = require('express');
 var http = require('http');
 var bodyParser = require('body-parser');
 
+var clientMain = require('./client.js');
+
 var app = express();
 app.use(bodyParser.json());
 
-function createMatch(connection){
-
-    this.connection = connection;
-    var state = "connected";
-    var identifier;
-
-    connection.on('message', function (message) {
-        stateMachine(message);
-    });
-
-    connection.on('close', function (reasonCode, description) {
-        console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
-    });
+function createMatch(matchID){
+    var matchState = "created";
+    var matchID = matchID;
+    var clientsMap = {};
+    var slots = 4;
 
     function stateMachine(message){
-        switch (state) {
-            case "connected": stateConnected(message); break;
+        switch (matchState) {
+            case "created": break;
             default: console.log("States error"); break;
         }
     }
 
-
-    function stateConnected(message){
-        var jsonMessage = JSON.parse(message.utf8Data);
-
-        if (jsonMessage.command == "create"){
-            identifier = 'idFijo';
-            state = 'created';
-            var response = JSON.stringify({ response: 'identifier', arg1: identifier});
-            connection.sendUTF(response);
-        } else {
-            var response = JSON.stringify({ response: 'error'});
+    this.addClient = function(connection, client, clientID){
+        if (slots > 0){
+            slots--;
+            if (clientsMap[clientID] == undefined){
+                clientsMap[clientID] = client;
+                if (slots == 0){
+                    state = "slotsFull";
+                }
+            }else{
+                var response = JSON.stringify({ response: 'Client ID already in use. Ur cheating?'});
+                connection.sendUTF(response);
+            }
+        }else{
+            var response = JSON.stringify({ response: 'Match Full'});
             connection.sendUTF(response);
         }
-
-        //var jsonMessage = JSON.parse(message.body);
-        //console.log(String(jsonMessage[0].command));
-        //connection.writeHead(200, { 'Content-Type': 'application/json' });
-        //connection.write(JSON.stringify({ response: 'created', arg1: 'idFijo' }));
-
-        identifier = 'idFijo';
-        state = 'created';
     }
 
 }
