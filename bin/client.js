@@ -18,7 +18,7 @@ function createClient(connection, idClient, match){
 
     connection.on('close', function (reasonCode, description) {
         var msg = JSON.stringify({ response: idClient + ' disconnected'});
-        myMatch.broadcastMSG();
+        myMatch.broadcastMSG(msg);
         console.log((new Date()) + ' Client' + connection.remoteAddress + ' disconnected.');
     });
 
