@@ -2,30 +2,30 @@
  * Created by Danther on 30/04/2015.
  */
 
-var http = require('http');
+//var http = require('http');
 var WebSocketServer = require('websocket').server;
+
 var matchMain = require('./match.js');
 var clientMain = require('./client.js');
 
-var matchesMap = [];
+var matchesList = [];
 
 function createWS(server) {
-    wsServer = new WebSocketServer({
+    var wsServer = new WebSocketServer({
         httpServer: server
         //TODO: Cuando añadamos verificacion
-        //autoAcceptConnections: false
+            //autoAcceptConnections: false
     });
 
     wsServer.on('request', function (r) {
         switch (r.requestedProtocols.toString()) {
-            case "creatematch": createMatchProtocol(r); break;
             case "playgame": playGameProtocol(r); break;
             default: r.reject(); console.log((new Date()) + ' Connection Rejected. Format unrecognized');
         }
     });
 }
 
-function createMatchProtocol(r){
+/*function createMatchProtocol(r){
     try {
         var connection = r.accept('creatematch', r.origin);
         console.log((new Date()) + ' Lobby ' + connection.remoteAddress + ' Connection accepted');
@@ -38,9 +38,9 @@ function createMatchProtocol(r){
                     //TODO: Esto habra que generarlo en la siguiente version
                     // O quiza que el lobby sea quien envie el especificador
                     var matchID = 'idFijo';
-                    if (matchesMap[matchID] == undefined) {
+                    if (matchesList[matchID] == undefined) {
                         var match = new matchMain(matchID);
-                        matchesMap[matchID] = match;
+                        matchesList[matchID] = match;
                         var response = JSON.stringify({response: 'identifier', arg1: matchID});
                         connection.sendUTF(response);
                     } else {
@@ -48,10 +48,10 @@ function createMatchProtocol(r){
                         connection.sendUTF(response);
                     }
                 } else if (jsonMessage.command == "closeall") {
-                    for (var mtc in matchesMap){
-                        matchesMap[mtc].closeAll();
+                    for (var mtc in matchesList){
+                        matchesList[mtc].closeAll();
                     }
-                    matchesMap = matchesMap.splice(0, matchesMap.length);
+                    matchesList = matchesList.splice(0, matchesList.length);
                     var response = JSON.stringify({response: 'Matches closed'});
                     connection.sendUTF(response);
                 }else{
@@ -74,41 +74,53 @@ function createMatchProtocol(r){
         console.log((new Date()) + ' Connection aborted. ' + except.toString());
         connection.close();
     }
-}
+}*/
 
+/*
+ * This function is what accepts and manages the client connection until it log in
+ * Under our playgame websocket protocol
+ */
 function playGameProtocol(r){
     try {
         var connection = r.accept('playgame', r.origin);
+
         console.log((new Date()) + ' Client ' + connection.remoteAddress + ' Connection accepted');
 
+        //All listeners are overridden by the client class when its created
         connection.on('message', function (message) {
-            var jsonMessage = JSON.parse(message.utf8Data);
+            var parsedMessage = JSON.parse(message.utf8Data);
 
-            if (jsonMessage.command == "login"){
-                var specMatch = matchesMap[jsonMessage.arg1];
-                var clientID = jsonMessage.arg2;
-                if (specMatch != undefined && clientID != undefined){
-                    var client = new clientMain(connection, clientID, specMatch);
-                    specMatch.addClient(connection, client, clientID);
-                    var msg_toBroadcast = JSON.stringify({response: clientID + ' has logged in'});
-                    specMatch.broadcastMSG(msg_toBroadcast);
-                }else{
-                    var response = JSON.stringify({ response: 'error'});
+            if (parsedMessage.command == "login") {
+                var clientMatch = matchesList[parsedMessage.arg1];
+                var idClient = parsedMessage.arg2;
+
+                if (clientMatch != undefined && idClient != undefined) {
+                    var client = new clientMain(connection, idClient, clientMatch);
+                    var msg_toBroadcast = JSON.stringify({response: idClient + ' has logged in'});
+
+                    clientMatch.addClient(connection, client, idClient);
+                    clientMatch.broadcastMSG(msg_toBroadcast);
+
+                } else {
+                    var msg_toSend = JSON.stringify({ response: 'error'});
+
                     connection.sendUTF(response);
                 }
+
             } else {
-                var response = JSON.stringify({ response: 'error'});
+                var msg_toSend = JSON.stringify({ response: 'error'});
+
                 connection.sendUTF(response);
             }
         });
 
         connection.on('close', function (reasonCode, description) {
-            console.log((new Date()) + ' Lobby ' + connection.remoteAddress + ' disconnected.');
+            console.log((new Date()) + ' Client ' + connection.remoteAddress + ' disconnected.');
         });
 
     } catch (except) {
-        connection.close();
         console.log((new Date()) + ' Connection aborted. ' + except.toString());
+        connection.close();
     }
 }
 
