@@ -3,7 +3,7 @@
  */
 
 // Exported function/class
-function createClient(connection, idClient, match){
+function clientMain(connection, idClient, match){
 
     var connection = connection;
     var idClient = idClient;
@@ -69,4 +69,4 @@ function createClient(connection, idClient, match){
 
 }
 
-module.exports = createClient;
+module.exports = clientMain;

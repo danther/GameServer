@@ -2,13 +2,9 @@
  * Created by Danther on 30/04/2015.
  */
 
-//var http = require('http');
+var http = require('http');
 var WebSocketServer = require('websocket').server;
-
-var matchMain = require('./match.js');
 var clientMain = require('./client.js');
-
-var matchesList = [];
 
 function createWS(server) {
     var wsServer = new WebSocketServer({
@@ -25,6 +21,8 @@ function createWS(server) {
     });
 }
 
+// TODO: Prioritary. We should pass all createMatchProtocol functionality to our new structure
+
 /*function createMatchProtocol(r){
     try {
         var connection = r.accept('creatematch', r.origin);
@@ -38,9 +36,9 @@ function createWS(server) {
                     //TODO: Esto habra que generarlo en la siguiente version
                     // O quiza que el lobby sea quien envie el especificador
                     var matchID = 'idFijo';
-                    if (matchesList[matchID] == undefined) {
+                    if (matchList[matchID] == undefined) {
                         var match = new matchMain(matchID);
-                        matchesList[matchID] = match;
+                        matchList[matchID] = match;
                         var response = JSON.stringify({response: 'identifier', arg1: matchID});
                         connection.sendUTF(response);
                     } else {
@@ -48,10 +46,10 @@ function createWS(server) {
                         connection.sendUTF(response);
                     }
                 } else if (jsonMessage.command == "closeall") {
-                    for (var mtc in matchesList){
-                        matchesList[mtc].closeAll();
+                    for (var mtc in matchList){
+                        matchList[mtc].closeAll();
                     }
-                    matchesList = matchesList.splice(0, matchesList.length);
+                    matchList = matchList.splice(0, matchList.length);
                     var response = JSON.stringify({response: 'Matches closed'});
                     connection.sendUTF(response);
                 }else{
@@ -91,7 +89,7 @@ function playGameProtocol(r){
             var parsedMessage = JSON.parse(message.utf8Data);
 
             if (parsedMessage.command == "login") {
-                var clientMatch = matchesList[parsedMessage.arg1];
+                var clientMatch = matchList[parsedMessage.arg1];
                 var idClient = parsedMessage.arg2;
 
                 if (clientMatch != undefined && idClient != undefined) {
@@ -102,13 +100,13 @@ function playGameProtocol(r){
                     clientMatch.broadcastMSG(msg_toBroadcast);
 
                 } else {
-                    var msg_toSend = JSON.stringify({ response: 'error'});
+                    var msg_toSend = JSON.stringify({ response: 'Match doesnt exist or clientID already in use' });
 
                     connection.sendUTF(response);
                 }
 
             } else {
-                var msg_toSend = JSON.stringify({ response: 'error'});
+                var msg_toSend = JSON.stringify({ response: 'Command unrecognized' });
 
                 connection.sendUTF(response);
             }

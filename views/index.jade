@@ -1,3 +1,5 @@
+// TODO: logged var should set to true only after a successful login
+
 doctype html
 
 html
@@ -42,6 +44,7 @@ html
        * Functions to send messages under our client protocol
        */
 
+      var logged = false;
       // Ensure the format of login-type messages
       function sendLogin(option){
         if ($("#chatInput").val().length <= 2){
@@ -49,6 +52,7 @@ html
         }else if (!logged){
           var msg_toSend = JSON.stringify({command: option, arg1: idMatch, arg2: $("#chatInput").val()})
           socketFunction.sendMSG(msg_toSend);
+          logged = true;
         }else{
           writeMSG('system', 'Already logged');
         }
@@ -90,7 +94,7 @@ html
       function connect(){
         var ws = new WebSocket("ws://game05dad.azurewebsites.net", 'playgame' );
 
-        this.sendMSG = function sendMSG(msg){
+        this.sendMSG = function (msg){
           ws.send(msg);
         }
 
