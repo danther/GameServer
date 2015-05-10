@@ -6,7 +6,10 @@ var http = require('http');
 var WebSocketServer = require('websocket').server;
 var clientMain = require('./client.js');
 
+var matchList = [];
+
 function createWS(server) {
+
     var wsServer = new WebSocketServer({
         httpServer: server
         //TODO: Cuando añadamos verificacion
@@ -84,26 +87,33 @@ function playGameProtocol(r){
 
         console.log((new Date()) + ' Client ' + connection.remoteAddress + ' Connection accepted');
 
-        //All listeners are overridden by the client class when its created
+        //All listeners are overridden by the client class when its created or rewired
         connection.on('message', function (message) {
             var parsedMessage = JSON.parse(message.utf8Data);
 
             if (parsedMessage.command == "login") {
                 var clientMatch = matchList[parsedMessage.arg1];
                 var idClient = parsedMessage.arg2;
+                var tokenClient = parsedMessage.arg3;
 
-                if (clientMatch != undefined && idClient != undefined) {
-                    var client = new clientMain(connection, idClient, clientMatch);
-                    var msg_toBroadcast = JSON.stringify({response: idClient + ' has logged in'});
+                if (clientMatch != undefined && idClient != undefined && tokenClient != undefined) {
+                    if (clientMatch.getClient(idClient) == undefined){
+                        var client = new clientMain(connection, idClient, clientMatch);
+                        var msg_toBroadcast = JSON.stringify({response: idClient + ' has logged in'});
 
-                    clientMatch.addClient(connection, client, idClient);
-                    clientMatch.broadcastMSG(msg_toBroadcast);
+                        clientMatch.addClient(connection, client, idClient);
+                        clientMatch.broadcastMSG(msg_toBroadcast);
+                    }else{
+                        clientMatch.getClient(idClient).rewireClient(connection);
+                        var msg_toBroadcast = JSON.stringify({response: idClient + ' has reconnected'});
 
+                        clientMatch.broadcastMSG(msg_toBroadcast);
+                    }
                 } else {
                     var msg_toSend = JSON.stringify({
-                        response: 'Error: Match doesnt exist or clientID already in use' });
+                        response: 'Error: Missing arguments. Bad URL?' });
 
-                    connection.sendUTF(response);
+                    connection.sendUTF(msg_toSend);
                 }
 
             } else {
@@ -123,4 +133,7 @@ function playGameProtocol(r){
     }
 }
 
-module.exports = createWS;
+module.exports = {
+    createWS: createWS,
+    matchList: matchList
+};

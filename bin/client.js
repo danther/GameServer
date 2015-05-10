@@ -29,6 +29,23 @@ function clientMain(connection, idClient, match){
         myMatch.broadcastMSG(msg);
     });
 
+    // This is used to change the connection on a client so clients can be able to reconnect
+    this.rewireClient = function rewireClient(newConnection) {
+        connection.removeAllListeners();
+        connection = newConnection;
+
+        connection.on('message', function (message) {
+            stateMachine(message);
+        });
+
+        connection.on('close', function (reasonCode, description) {
+            var msg = JSON.stringify({ response: idClient + ' disconnected'});
+            console.log((new Date()) + ' Client' + connection.remoteAddress + ' disconnected.');
+
+            myMatch.broadcastMSG(msg);
+        });
+    }
+
 
     /**
      * States logic

@@ -30,17 +30,21 @@ function createMatch(matchID){
             if (clientsList[clientID] == undefined){
                 clientsList[clientID] = client;
                 if (slots == 0){
-                    state = "slotsFull";
+                    matchState = "slotsFull";
                 }
             }else{
-                var response = JSON.stringify({ response: 'Client ID already in use.'});
+                var response = JSON.stringify({ response: 'Error: Client ID already in use.'});
                 connection.sendUTF(response);
             }
         }else{
-            var response = JSON.stringify({ response: 'Match Full'});
+            var response = JSON.stringify({ response: 'Error: Match Full'});
             connection.sendUTF(response);
             connection.close();
         }
+    }
+
+    this.getClient = function(clientID){
+        return clientsList[clientID];
     }
 
     this.broadcastMSG = function(msg){

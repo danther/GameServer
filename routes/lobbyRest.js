@@ -5,6 +5,9 @@
 var express = require('express');
 var router = express.Router();
 
+var matchMain = require('../bin/match.js');
+var wsMain = require('../bin/websocket.js');
+
 /*
  * All routes in this file are relative to /creatematch/
  *
@@ -16,21 +19,22 @@ var router = express.Router();
 router.get('/', function(req, res, next) {
     var matchID = generateID();
 
-    if (matchList[matchID] == undefined) {
-      createMatch(matchID);
-      var msg_toEnd = JSON.stringify({ response: matchID});
+    if (wsMain.matchList[matchID] == undefined) {
+        var match = new matchMain(matchID);
+        wsMain.matchList[matchID] = match;
+        var msg_toEnd = JSON.stringify({ response: matchID});
+        res.setHeader("ContentType", "aplication/text");
 
       res.end(msg_toEnd);
     } else {
-        var msg_toEnd = JSON.stringify({ response: 'Error: ID collision', msgID: 'debug'});
+        var msg_toEnd = JSON.stringify({ response: 'Error: ID collision'});
 
-        res.end(msg_toEnd);
+        res.write(msg_toEnd);
     }
 
     function generateID(){
-        var identifier = 'xxxx-xxxx-xxxx-xxxx';
-        identifier.replace('x', '' + Math.floor(Math.random() * 0x10000));
-        console.log(identifier);
+        var identifier = String('xxxx-xxxx-xxxx-xxxx');
+        identifier = identifier.replace(/x/g, function () { return '' + Math.floor(Math.random() * 0x1000); });
         return identifier;
     }
 

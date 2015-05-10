@@ -12,12 +12,13 @@ html
     // Main script to manage the client
     script(type='text/javascript').
 
-      // The match's id should be passed on the url by /?idMatch=xxx
       var idMatch = getUrlVars()["idMatch"];
+      var idClient = getUrlVars()["idClient"];
+      var tokenClient = getUrlVars()["tokenClient"];
 
       // Taken from internet. A function to parse URLs
       function getUrlVars() {
-        var vars = {};
+        var vars = [];
         var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
           vars[key] = value;
         });
@@ -46,14 +47,16 @@ html
       var logged = false;
       // Ensure the format of login-type messages
       function sendLogin(option){
-        if ($("#chatInput").val().length <= 2){
-          writeMSG('system', 'Username too short');
-        }else if (!logged){
-          var msg_toSend = JSON.stringify({command: option, arg1: idMatch, arg2: $("#chatInput").val()})
-          socketFunction.sendMSG(msg_toSend);
-          logged = true;
+        if (!logged){
+          if (idMatch == undefined || idClient == undefined || tokenClient == undefined){
+            writeMSG('system', 'Bad access to game server. Lobby url seems wrong.');
+          } else {
+            var msg_toSend = JSON.stringify({command: option, arg1: idMatch, arg2: idClient, arg3: tokenClient})
+            socketFunction.sendMSG(msg_toSend);
+            logged = true;
+          }
         }else{
-          writeMSG('system', 'If you want to log in again, use reset first');
+          writeMSG('system', 'If you want to log in again, use reset');
         }
         $("#chatInput").val('');
       }
@@ -91,7 +94,8 @@ html
 
       // Main function to manage connection with the server
       function connect(){
-        var ws = new WebSocket("ws://game05dad.azurewebsites.net", 'playgame' );
+        //var ws = new WebSocket("ws://game05dad.azurewebsites.net", 'playgame' );
+        var ws = new WebSocket("ws://localhost", 'playgame' );
 
         this.sendMSG = function (msg){
           ws.send(msg);
@@ -99,6 +103,8 @@ html
 
         ws.onopen = function(){
           writeMSG('system', 'Conection established');
+
+          sendLogin('login');
         };
 
         ws.onmessage = function (evt){
@@ -148,7 +154,7 @@ body
     input#chatInput(type='textbox' style={width: '35em', clear: 'both', margin: '0em 1em'})
 
     select#chatOptions(style={clear: 'both', margin: '2em 1em'})
-      - var optionsAvaible = ["Login", "Chat", "Close"];
+      - var optionsAvaible = ["Chat", "Close"];
       for item in optionsAvaible
         option(value= item) #{item}
 
