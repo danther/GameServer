@@ -32,6 +32,7 @@ function clientMain(connection, idClient, match){
     // This is used to change the connection on a client so clients can be able to reconnect
     this.rewireClient = function rewireClient(newConnection) {
         connection.removeAllListeners();
+        newConnection.removeAllListeners();
         connection = newConnection;
 
         connection.on('message', function (message) {

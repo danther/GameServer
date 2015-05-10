@@ -111,7 +111,7 @@ function playGameProtocol(r){
                     }
                 } else {
                     var msg_toSend = JSON.stringify({
-                        response: 'Error: Missing arguments. Bad URL?' });
+                        response: 'Error: Missing or wrong arguments. Bad URL?' });
 
                     connection.sendUTF(msg_toSend);
                 }
@@ -119,7 +119,7 @@ function playGameProtocol(r){
             } else {
                 var msg_toSend = JSON.stringify({ response: 'Error: Command unrecognized' });
 
-                connection.sendUTF(response);
+                connection.sendUTF(msg_toSend);
             }
         });
 
