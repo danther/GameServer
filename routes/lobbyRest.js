@@ -14,19 +14,24 @@ var router = express.Router();
 
 /* GET matchIdentifier */
 router.get('/', function(req, res, next) {
-    // TODO: match identifier should be generated randomly
-    var matchID = 'idFijo';
+    var matchID = generateID();
 
-    // TODO: Collisions between identifiers should be checked and avoided transparently to user
-    if (matchList['idFijo'] == undefined) {
+    if (matchList[matchID] == undefined) {
       createMatch(matchID);
       var msg_toEnd = JSON.stringify({ response: matchID});
 
       res.end(msg_toEnd);
     } else {
-        var msg_toEnd = JSON.stringify({ response: 'error', errorCode: 'idFijo already in use', msgID: 'debug'});
+        var msg_toEnd = JSON.stringify({ response: 'Error: ID collision', msgID: 'debug'});
 
         res.end(msg_toEnd);
+    }
+
+    function generateID(){
+        var identifier = 'xxxx-xxxx-xxxx-xxxx';
+        identifier.replace('x', '' + Math.floor(Math.random() * 0x10000));
+        console.log(identifier);
+        return identifier;
     }
 
 });

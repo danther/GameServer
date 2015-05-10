@@ -100,13 +100,14 @@ function playGameProtocol(r){
                     clientMatch.broadcastMSG(msg_toBroadcast);
 
                 } else {
-                    var msg_toSend = JSON.stringify({ response: 'Match doesnt exist or clientID already in use' });
+                    var msg_toSend = JSON.stringify({
+                        response: 'Error: Match doesnt exist or clientID already in use' });
 
                     connection.sendUTF(response);
                 }
 
             } else {
-                var msg_toSend = JSON.stringify({ response: 'Command unrecognized' });
+                var msg_toSend = JSON.stringify({ response: 'Error: Command unrecognized' });
 
                 connection.sendUTF(response);
             }

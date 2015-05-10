@@ -1,5 +1,3 @@
-// TODO: logged var should set to true only after a successful login
-
 doctype html
 
 html
@@ -37,6 +35,7 @@ html
         socketFunction.closeConnection();
         $("#chatArea").val('');
         $("#chatInput").val('');
+        logged = false;
         socketFunction = new connect();
       }
 
@@ -54,7 +53,7 @@ html
           socketFunction.sendMSG(msg_toSend);
           logged = true;
         }else{
-          writeMSG('system', 'Already logged');
+          writeMSG('system', 'If you want to log in again, use reset first');
         }
         $("#chatInput").val('');
       }
