@@ -85,7 +85,6 @@ html
         option = option.toString().toLowerCase();
 
         switch (option){
-          case "login": sendLogin(option); break;
           case "chat": sendChat(option); break;
           case "close": sendClose(option); break;
           default: break; // It should not be reached in any use situation.
@@ -157,5 +156,5 @@ body
       for item in optionsAvaible
         option(value= item) #{item}
 
-    button#chatButton(type='button' style={clear: 'both', margin: '0em 1em'} onclick='parseMSG()') Send
+    button#chatButton(type='button' style={clear: 'both', margin: '0em 1em'} onclick='sendMSGByType()') Send
     button#chatButton(type='button' style={clear: 'both', margin: '1em 1em'} onclick='reset()') Reset
