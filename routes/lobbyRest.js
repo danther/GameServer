@@ -24,6 +24,7 @@ router.get('/', function(req, res, next) {
         wsMain.matchList[matchID] = match;
         var msg_toEnd = JSON.stringify({ response: matchID});
 
+        res.writeHead(200, { "Content-Type": "application/json" });
         res.end(msg_toEnd);
     } else {
         var msg_toEnd = JSON.stringify({ response: 'Error: ID collision'});
