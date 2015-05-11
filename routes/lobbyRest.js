@@ -23,13 +23,13 @@ router.get('/', function(req, res, next) {
         var match = new matchMain(matchID);
         wsMain.matchList[matchID] = match;
         var msg_toEnd = JSON.stringify({ response: matchID});
-        res.setRequestHeader("ContentType", "aplication/json");
 
         res.end(msg_toEnd);
     } else {
         var msg_toEnd = JSON.stringify({ response: 'Error: ID collision'});
 
-        res.end(msg_toEnd);
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(msg_toEnd, "utf8");
     }
 
     function generateID(){
