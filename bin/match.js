@@ -185,7 +185,7 @@ function createMatch(matchID, clientsData){
                         startMatch();
 
                         msg_toBroadcast = JSON.stringify({response: 'Match start! '
-                            + clientsData['idClient1'] + ' turn'});
+                            + clientsData['idClient1'] + ' turn!'});
 
                         this.broadcastMSG(msg_toBroadcast);
                     }
