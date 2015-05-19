@@ -3,10 +3,11 @@
  */
 
 // Exported function/class
-function clientMain(connection, idClient, match){
+function clientMain(connection, idClient, match, tokenClient){
 
     var connection = connection;
     var idClient = idClient;
+    var tokenClient = tokenClient;
     var myMatch = match;
 
     var clientState= "connected"; //Initial state of the class
@@ -47,6 +48,10 @@ function clientMain(connection, idClient, match){
         });
     }
 
+    this.getTokenClient = function getTokenClient() {
+        return tokenClient;
+    }
+
 
     /**
      * States logic
@@ -67,7 +72,8 @@ function clientMain(connection, idClient, match){
             case "chat": myMatch.broadcastMSG(JSON.stringify({ response: jsonMessage.arg1, msgID: idClient})); break;
             case "close": myMatch.broadcastMSG(JSON.stringify({ response: idClient + ' left the match'}));
                 connection.close(); break;
-            default: connection.sendUTF(JSON.stringify({response: 'error'})); break;
+            default: myMatch.actualize(message, idClient); break;
+            //default: connection.sendUTF(JSON.stringify({response: 'error'})); break;
         }
     }
 

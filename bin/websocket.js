@@ -24,58 +24,6 @@ function createWS(server) {
     });
 }
 
-// TODO: Prioritary. We should pass all createMatchProtocol functionality to our new structure
-
-/*function createMatchProtocol(r){
-    try {
-        var connection = r.accept('creatematch', r.origin);
-        console.log((new Date()) + ' Lobby ' + connection.remoteAddress + ' Connection accepted');
-
-        connection.on('message', function (message) {
-            try {
-                var jsonMessage = JSON.parse(message.utf8Data);
-
-                if (jsonMessage.command == "create") {
-                    //TODO: Esto habra que generarlo en la siguiente version
-                    // O quiza que el lobby sea quien envie el especificador
-                    var matchID = 'idFijo';
-                    if (matchList[matchID] == undefined) {
-                        var match = new matchMain(matchID);
-                        matchList[matchID] = match;
-                        var response = JSON.stringify({response: 'identifier', arg1: matchID});
-                        connection.sendUTF(response);
-                    } else {
-                        var response = JSON.stringify({response: 'error'});
-                        connection.sendUTF(response);
-                    }
-                } else if (jsonMessage.command == "closeall") {
-                    for (var mtc in matchList){
-                        matchList[mtc].closeAll();
-                    }
-                    matchList = matchList.splice(0, matchList.length);
-                    var response = JSON.stringify({response: 'Matches closed'});
-                    connection.sendUTF(response);
-                }else{
-                    var response = JSON.stringify({response: 'error'});
-                    connection.sendUTF(response);
-                }
-            } catch (except) {
-                console.log((new Date()) + ' Connection Aborted. ' + except.toString());
-                connection.close();
-            }
-        });
-
-        connection.on('close', function (reasonCode, description) {
-            console.log((new Date()) + ' Lobby ' + connection.remoteAddress + ' disconnected.');
-        });
-
-        var partida = new matchMain(connection);
-
-    } catch (except) {
-        console.log((new Date()) + ' Connection aborted. ' + except.toString());
-        connection.close();
-    }
-}*/
 
 /*
  * This function is what accepts and manages the client connection until it log in
@@ -97,17 +45,25 @@ function playGameProtocol(r){
                 var tokenClient = parsedMessage.arg3;
 
                 if (clientMatch != undefined && idClient != undefined && tokenClient != undefined) {
+
                     if (clientMatch.getClient(idClient) == undefined){
-                        var client = new clientMain(connection, idClient, clientMatch);
-                        var msg_toBroadcast = JSON.stringify({response: idClient + ' has logged in'});
+                        var client = new clientMain(connection, idClient, clientMatch, tokenClient);
 
-                        clientMatch.addClient(connection, client, idClient);
-                        clientMatch.broadcastMSG(msg_toBroadcast);
+                        clientMatch.addClient(connection, client, idClient, tokenClient);
+
                     }else{
-                        clientMatch.getClient(idClient).rewireClient(connection);
-                        var msg_toBroadcast = JSON.stringify({response: idClient + ' has reconnected'});
+                        if (clientMatch.getClient(idClient).getTokenClient() == tokenClient) {
+                            clientMatch.getClient(idClient).rewireClient(connection);
+                            var msg_toBroadcast = JSON.stringify({response: idClient + ' has reconnected'});
 
-                        clientMatch.broadcastMSG(msg_toBroadcast);
+                            clientMatch.broadcastMSG(msg_toBroadcast);
+
+                        } else {
+                            var msg_toSend = JSON.stringify({
+                                response: 'Error: wrong token in reconnection attempt' });
+
+                            connection.sendUTF(msg_toSend);
+                        }
                     }
                 } else {
                     var msg_toSend = JSON.stringify({
@@ -115,7 +71,6 @@ function playGameProtocol(r){
 
                     connection.sendUTF(msg_toSend);
                 }
-
             } else {
                 var msg_toSend = JSON.stringify({ response: 'Error: Command unrecognized' });
 

@@ -79,6 +79,13 @@ html
         $("#chatInput").val('');
       }
 
+      // Ensure the format of close-type messages
+      function sendEcho(option){
+        var msg_toSend = JSON.stringify({command: option})
+        socketFunction.sendMSG(msg_toSend);
+        $("#chatInput").val('');
+      }
+
       function sendMSGByType() {
         var option = $( "#chatOptions option:selected" ).text();
 
@@ -87,14 +94,15 @@ html
         switch (option){
           case "chat": sendChat(option); break;
           case "close": sendClose(option); break;
+          case "echo": sendEcho(option); break;
           default: break; // It should not be reached in any use situation.
         }
       }
 
       // Main function to manage connection with the server
       function connect(){
-        var ws = new WebSocket("ws://game05dad.azurewebsites.net", 'playgame' );
-        //var ws = new WebSocket("ws://localhost", 'playgame' );
+        //var ws = new WebSocket("ws://game05dad.azurewebsites.net", 'playgame' );
+        var ws = new WebSocket("ws://localhost", 'playgame' );
 
         this.sendMSG = function (msg){
           ws.send(msg);
@@ -115,13 +123,21 @@ html
            * When not specified, the client will take it as a "server" msg.
            */
           if (msgParsed.response == undefined){
-            writeMSG('system', 'Error on message');
+            parseGameStates(msgParsed);
           }else if (msgParsed.msgID != undefined){
             writeMSG(msgParsed.msgID, msgParsed.response);
           }else{
             writeMSG('server', msgParsed.response);
           }
         };
+
+        function parseGameStates(msgParsed){
+          if (msgParsed.state != undefined && msgParsed.arg1 != undefined) {
+            writeState(msgParsed.state, msgParsed.arg1);
+          } else {
+            writeMSG('system', 'Error on message');
+          }
+        }
 
         ws.onclose = function(){
           writeMSG('system', 'Connection closed');
@@ -141,6 +157,14 @@ html
         $("#chatArea").val($("#chatArea").val() + sender + ' : ' + text + '\n');
       }
 
+      function writeState(state, text){
+        if (state.toLowerCase() == 'turn'){
+          $("#gameState").val(state + ' : ' + text + '\n');
+        } else {
+          $("#gameState").val($("#gameState").val() + state + ' : ' + text + '\n');
+        }
+      }
+
 body
   h1= title
   p Cliente web del juego
@@ -153,9 +177,16 @@ body
     input#chatInput(type='textbox' style={width: '35em', clear: 'both', margin: '0em 1em'})
 
     select#chatOptions(style={clear: 'both', margin: '2em 1em'})
-      - var optionsAvaible = ["Chat", "Close"];
+      - var optionsAvaible = ["Chat", "Close", "Echo"];
       for item in optionsAvaible
         option(value= item) #{item}
 
     button#chatButton(type='button' style={clear: 'both', margin: '0em 1em'} onclick='sendMSGByType()') Send
     button#chatButton(type='button' style={clear: 'both', margin: '1em 1em'} onclick='reset()') Reset
+
+    br
+    br
+    br
+    label Game State
+    br
+    textarea#gameState(class='textArea' rows='30' cols='100' readonly style={resize: 'none'})
