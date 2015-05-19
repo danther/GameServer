@@ -73,7 +73,6 @@ function clientMain(connection, idClient, match, tokenClient){
             case "close": myMatch.broadcastMSG(JSON.stringify({ response: idClient + ' left the match'}));
                 connection.close(); break;
             default: myMatch.actualize(message, idClient); break;
-            //default: connection.sendUTF(JSON.stringify({response: 'error'})); break;
         }
     }
 
