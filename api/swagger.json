@@ -1,0 +1,78 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Game 4 - Group 5 - DAD",
+    "description": "Documentation for our game server&#39;s create match service",
+    "version": "1.0.0"
+  },
+  "produces": ["application/json"],
+  "host": "localhost:8080",
+  "basePath": "/",
+  "paths": {
+  
+  "/creatematch/": {
+    "post": {
+      "x-swagger-router-controller": "Default",
+      "tags": ["Default"],
+      "operationId": "creatematchPost",
+      "parameters": [
+        
+        {
+  "in" : "body",
+  "name" : "body",
+  "description" : "Create a new match",
+  "required" : true,
+  "schema" : {
+    "$ref" : "#/definitions/JSON_request"
+  }
+}
+        
+      ],
+      "responses": {
+        
+        "200": {
+  "description" : "Returns the new game match identifier",
+  "schema" : {
+    "$ref" : "#/definitions/JSON_response"
+  }
+}
+        ,
+        
+        "500": {
+  "description" : "Error on request",
+  "schema" : {
+    "$ref" : "#/definitions/JSON_response"
+  }
+}
+        
+        
+      }
+    }
+  } 
+  
+   
+  }, "definitions": {
+  "JSON_request": {
+  "properties" : {
+    "idClient1" : {
+      "type" : "string"
+    },
+    "tokenClient1" : {
+      "type" : "string"
+    },
+    "idClient2" : {
+      "type" : "string"
+    },
+    "tokenClient2" : {
+      "type" : "string"
+    }
+  }
+},"JSON_response": {
+  "properties" : {
+    "response" : {
+      "type" : "string"
+    }
+  }
+}
+  }
+}
