@@ -62,6 +62,7 @@ function clientMain(connection, idClient, match, tokenClient){
     function stateMachine(message){
         switch (clientState) {
             case "connected": stateConnected(message); break;
+            case "playing": statePlaying(message); break;
             default: console.log("States error"); break;
         }
     }
@@ -72,7 +73,18 @@ function clientMain(connection, idClient, match, tokenClient){
             case "chat": myMatch.broadcastMSG(JSON.stringify({ response: jsonMessage.arg1, msgID: idClient})); break;
             case "close": myMatch.broadcastMSG(JSON.stringify({ response: idClient + ' left the match'}));
                 connection.close(); break;
-            default: myMatch.actualize(message, idClient); break;
+            default: break;
+        }
+    }
+
+    function statePlaying(message){
+        var jsonMessage = JSON.parse(message.utf8Data);
+        switch(jsonMessage.command){
+            case "chat": myMatch.broadcastMSG(JSON.stringify({ response: jsonMessage.arg1, msgID: idClient})); break;
+            case "close": myMatch.broadcastMSG(JSON.stringify({ response: idClient + ' left the match'}));
+                connection.close(); break;
+            case "play": myMatch.actualize(message, idClient); break;
+            default: break;
         }
     }
 
@@ -88,6 +100,10 @@ function clientMain(connection, idClient, match, tokenClient){
     // Public function so the match can kill clients to its needs, it seems deleting the listeners is not necessary
     this.forceClose = function(){
         connection.close();
+    }
+
+    this.setToPlay = function(){
+        clientState = "playing";
     }
 
 }

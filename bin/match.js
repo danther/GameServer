@@ -17,6 +17,7 @@ function createMatch(matchID, clientsData){
     var clientsData = clientsData;
     var clientsList = [];
     var slots = 2;
+    var finalMSG;
 
 
     /*
@@ -55,6 +56,11 @@ function createMatch(matchID, clientsData){
     var hop4Client1Stack = [];
     var hop4Client2Stack = [];
 
+    var client1Cubes = [];
+    var client2Cubes = [];
+
+    var trophies = [];
+
     var client1Trophies = [];
     var client2Trophies = [];
     /*****************************/
@@ -63,6 +69,7 @@ function createMatch(matchID, clientsData){
         switch (matchState) {
             case "created": break;
             case "started": break;
+            case "finished": break;
             default: console.log("States error"); break;
         }
     }
@@ -89,17 +96,461 @@ function createMatch(matchID, clientsData){
 
         hop1Cubes.push(hopCubes.pop());
         hop2Cubes.push(hopCubes.pop());
+        hop2Cubes.push(hopCubes.pop());
         hop3Cubes.push(hopCubes.pop());
+        hop3Cubes.push(hopCubes.pop());
+        hop3Cubes.push(hopCubes.pop());
+        hop4Cubes.push(hopCubes.pop());
+        hop4Cubes.push(hopCubes.pop());
+        hop4Cubes.push(hopCubes.pop());
         hop4Cubes.push(hopCubes.pop());
 
         hop1 = 'flatland';
         hop2 = 'mountain';
         hop3 = 'flatland';
         hop4 = 'mountain';
+
+        trophies = ['Red', 'Blue', 'Yellow', 'Gray'];
+
+        clientsList[clientsData["idClient1"]].setToPlay();
+        clientsList[clientsData["idClient2"]].setToPlay();
     }
 
     this.actualize = function actualize(message, idClient) {
-        this.sendState(idClient);
+        if (matchState == "finished"){
+            clientsList[idClient].sendMSG(finalMSG);
+
+            return "";
+        }
+
+        if (idClient == turn){
+            var parsedMessage = JSON.parse(message.utf8Data);
+
+            if (parsedMessage.arg1 == undefined || parsedMessage.arg2 == undefined) {
+                var hopTC;
+                var hopTCStack1;
+                var hopTCStack2;
+                var hopCubesTC;
+
+                switch (parsedMessage.arg1){
+                    case 'hop1Jug':
+                        addCardHop(hop1Client1Stack, hop1Client2Stack, idClient, parsedMessage, true);
+                        hopTC = hop1;
+                        hopTCStack1 = hop1Client1Stack;
+                        hopTCStack2 = hop1Client2Stack;
+                        hopCubesTC = hop1Cubes;
+                        break;
+                    case 'hop2Jug':
+                        addCardHop(hop2Client1Stack, hop2Client2Stack, idClient, parsedMessage, true);
+                        hopTC = hop2;
+                        hopTCStack1 = hop2Client1Stack;
+                        hopTCStack2 = hop2Client2Stack;
+                        hopCubesTC = hop2Cubes;
+                        break;
+                    case 'hop3Jug':
+                        addCardHop(hop3Client1Stack, hop3Client2Stack, idClient, parsedMessage, true);
+                        hopTC = hop3;
+                        hopTCStack1 = hop3Client1Stack;
+                        hopTCStack2 = hop3Client2Stack;
+                        hopCubesTC = hop3Cubes;
+                        break;
+                    case 'hop4Jug':
+                        addCardHop(hop4Client1Stack, hop4Client2Stack, idClient, parsedMessage, true);
+                        hopTC = hop4;
+                        hopTCStack1 = hop4Client1Stack;
+                        hopTCStack2 = hop4Client2Stack;
+                        hopCubesTC = hop4Cubes;
+                        break;
+                    case 'hop1Cont':
+                        addCardHop(hop1Client1Stack, hop1Client2Stack, idClient, parsedMessage, false);
+                        hopTC = hop1;
+                        hopTCStack1 = hop1Client1Stack;
+                        hopTCStack2 = hop1Client2Stack;
+                        hopCubesTC = hop1Cubes;
+                        break;
+                    case 'hop2Cont':
+                        addCardHop(hop2Client1Stack, hop2Client2Stack, idClient, parsedMessage, false);
+                        hopTC = hop2;
+                        hopTCStack1 = hop2Client1Stack;
+                        hopTCStack2 = hop2Client2Stack;
+                        hopCubesTC = hop2Cubes;
+                        break;
+                    case 'hop3Cont':
+                        addCardHop(hop3Client1Stack, hop3Client2Stack, idClient, parsedMessage, false);
+                        hopTC = hop3;
+                        hopTCStack1 = hop3Client1Stack;
+                        hopTCStack2 = hop3Client2Stack;
+                        hopCubesTC = hop3Cubes;
+                        break;
+                    case 'hop4Cont':
+                        addCardHop(hop4Client1Stack, hop4Client2Stack, idClient, parsedMessage, false);
+                        hopTC = hop4;
+                        hopTCStack1 = hop4Client1Stack;
+                        hopTCStack2 = hop4Client2Stack;
+                        hopCubesTC = hop4Cubes;
+                        break;
+                    default: break;
+                }
+
+                checkHop(hopTCStack1, hopTCStack2, hopTC);
+
+                checkCubes();
+
+                checkVictory();
+
+                if (turn == clientsData['idClient1']){
+                    turn = clientsData['idClient2'];
+                } else {
+                    turn = clientsData['idClient1'];
+                }
+
+                this.sendState(idClient);
+
+            } else {
+                var msg_toClient = JSON.stringify({response: 'Bad play message.'});
+
+                clientsList[idClient].sendMSGClient(msg_toClient);
+            }
+
+        } else {
+            var msg_toClient = JSON.stringify({response: 'Its not your turn, sorry'});
+
+            clientsList[idClient].sendMSGClient(msg_toClient);
+        }
+    }
+
+    function checkVictory() {
+        if (client1Trophies.length >= 3){
+            finalMSG = 'The winner is: ' + clientsData['idClient1'] + '!!!';
+            matchState = "finished";
+
+            this.broadcastMSG(finalMSG);
+
+        } else if (client2Trophies.length >= 3){
+            finalMSG = 'The winner is: ' + clientsData['idClient2'] + '!!!';
+            matchState = "finished";
+
+            this.broadcastMSG(finalMSG);
+        }
+    }
+
+    function checkCubes() {
+        var red, yellow, gray, blue;
+
+        for (var cube in client1Cubes){
+            var f3l = cube.substr(0, 3);
+            switch (f3l.toLowerCase()){
+                case 'red': red++; break;
+                case 'blu': blue++; break;
+                case 'yel': yellow++; break;
+                case 'gra': gray++; break;
+                default: break;
+            }
+        }
+
+        if (red > 2){
+            red = 3;
+            for (var cube in client1Cubes){
+                var f3l = cube.substr(0, 3);
+                if (f3l == 'red' && red > 0) {
+                    discardCubes.push(cube);
+                    delete client1Cubes[cube];
+                    red--;
+                }
+            }
+
+            if (trophies.indexOf('red') >= 0){
+                client1Trophies.push('red');
+                delete trophies[trophies.indexOf('red')];
+            }
+        }
+
+        if (blue > 2){
+            blue = 3;
+            for (var cube in client1Cubes){
+                var f3l = cube.substr(0, 3);
+                if (f3l == 'blu' && blue > 0) {
+                    discardCubes.push(cube);
+                    delete client1Cubes[cube];
+                    blue--;
+                }
+            }
+
+            if (trophies.indexOf('blue') >= 0){
+                client1Trophies.push('blue');
+                delete trophies[trophies.indexOf('blue')];
+            }
+        }
+
+        if (yellow > 2){
+            yellow = 3;
+            for (var cube in client1Cubes){
+                var f3l = cube.substr(0, 3);
+                if (f3l == 'yel' && yellow > 0) {
+                    discardCubes.push(cube);
+                    delete client1Cubes[cube];
+                    yellow--;
+                }
+            }
+
+            if (trophies.indexOf('yellow') >= 0){
+                client1Trophies.push('yellow');
+                delete trophies[trophies.indexOf('yellow')];
+            }
+        }
+
+        if (gray > 2){
+            gray = 3;
+            for (var cube in client1Cubes){
+                var f3l = cube.substr(0, 3);
+                if (f3l == 'gra' && gray > 0) {
+                    discardCubes.push(cube);
+                    delete client1Cubes[cube];
+                    gray--;
+                }
+            }
+
+            if (trophies.indexOf('gray') >= 0){
+                client1Trophies.push('gray');
+                delete trophies[trophies.indexOf('gray')];
+            }
+        }
+
+        red = 0;
+        blue = 0;
+        yellow = 0;
+        gray = 0;
+
+        for (var cube in client2Cubes){
+            var f3l = cube.substr(0, 3);
+            switch (f3l.toLowerCase()){
+                case 'red': red++; break;
+                case 'blu': blue++; break;
+                case 'yel': yellow++; break;
+                case 'gra': gray++; break;
+                default: break;
+            }
+        }
+
+        if (red > 2){
+            red = 3;
+            for (var cube in client2Cubes){
+                var f3l = cube.substr(0, 3);
+                if (f3l == 'red' && red > 0) {
+                    discardCubes.push(cube);
+                    delete client2Cubes[cube];
+                    red--;
+                }
+            }
+
+            if (trophies.indexOf('red') >= 0){
+                client2Trophies.push('red');
+                delete trophies[trophies.indexOf('red')];
+            }
+        }
+
+        if (blue > 2){
+            for (var cube in client2Cubes){
+                var f3l = cube.substr(0, 3);
+                if (f3l == 'blu' && blue > 0) {
+                    discardCubes.push(cube);
+                    delete client2Cubes[cube];
+                    blue--;
+                }
+            }
+
+            if (trophies.indexOf('blue') >= 0){
+                client2Trophies.push('blue');
+                delete trophies[trophies.indexOf('blue')];
+            }
+        }
+
+        if (yellow > 2){
+            yellow = 3;
+            for (var cube in client2Cubes){
+                var f3l = cube.substr(0, 3);
+                if (f3l == 'yel' && yellow > 0) {
+                    discardCubes.push(cube);
+                    delete client2Cubes[cube];
+                    yellow--;
+                }
+            }
+            if (trophies.indexOf('yellow') >= 0){
+                client2Trophies.push('yellow');
+                delete trophies[trophies.indexOf('yellow')];
+            }
+        }
+
+        if (gray > 2){
+            gray = 3;
+            for (var cube in client2Cubes){
+                var f3l = cube.substr(0, 3);
+                if (f3l == 'gra' && gray > 0) {
+                    discardCubes.push(cube);
+                    delete client2Cubes[cube];
+                    gray--;
+                }
+            }
+
+            if (trophies.indexOf('gray') >= 0){
+                client2Trophies.push('gray');
+                delete trophies[trophies.indexOf('gray')];
+            }
+        }
+    }
+
+    function checkHop(hopCubesTC, hopTCStack1, hopTCStack2, hopTC){
+        var red, yellow, gray, blue;
+        var redTemp, yellowTemp, grayTemp, blueTemp;
+        var sumPlayer1;
+        var sumPlayer2;
+
+
+        for (var cube in hopCubesTC){
+            var f3l = cube.substr(0, 3);
+            switch (f3l.toLowerCase()){
+                case 'red': red++; break;
+                case 'blu': blue++; break;
+                case 'yel': yellow++; break;
+                case 'gra': gray++; break;
+                default: break;
+            }
+        }
+
+        redTemp = red;
+        yellowTemp = yellow;
+        grayTemp = gray;
+        blueTemp = blue;
+
+        for (var card in hopTCStack1){
+            var f3l = card.substr(0, 3);
+
+            sumPlayer1 += parseInt(card.substr(-1 , 1));
+
+            switch (f3l.toLowerCase()){
+                case 'red': red--; break;
+                case 'blu': blue--; break;
+                case 'yel': yellow--; break;
+                case 'gra': gray--; break;
+                default: break;
+            }
+        }
+
+        for (var card in hopTCStack2){
+            var f3l = card.substr(0, 3);
+
+            sumPlayer2 += parseInt(card.substr(-1 , 1));
+
+            switch (f3l.toLowerCase()){
+                case 'red': redTemp--; break;
+                case 'blu': blueTemp--; break;
+                case 'yel': yellowTemp--; break;
+                case 'gra': grayTemp--; break;
+                default: break;
+            }
+        }
+
+        if (red <= 0 && redTemp <= 0 && yellow <= 0 && yellowTemp <= 0
+            && gray <= 0 && grayTemp <= 0 && blue <= 0 && blueTemp <= 0){
+
+            if (hopCubes.length < 4){
+                while (!discardCubes.isEmpty()){
+                    hopCubes.push(discardCubes.pop());
+                }
+                shuffle(hopCubes);
+            }
+
+            while (!hopTCStack1.isEmpty()){
+                discardDeck.push(hopTCStack1.pop());
+            }
+
+            while (!hopTCStack2.isEmpty()){
+                discardDeck.push(hopTCStack2.pop());
+            }
+
+            var cubesToAdd = 0;
+            if (hopTC == 'mountain'){
+                if (sumPlayer1 >= sumPlayer2){
+                    while (!hopCubesTC.isEmpty()){
+                        client1Cubes.push(hopCubesTC.pop());
+                        cubesToAdd++;
+                    }
+
+                } else {
+                    while (!hopCubesTC.isEmpty()){
+                        client2Cubes.push(hopCubesTC.pop());
+                        cubesToAdd++;
+                    }
+                }
+
+                hopTC = 'flatland';
+
+            } else {
+                if (sumPlayer1 >= sumPlayer2){
+                    while (!hopCubesTC.isEmpty()){
+                        client2Cubes.push(hopCubesTC.pop());
+                        cubesToAdd++;
+                    }
+
+                } else {
+                    while (!hopCubesTC.isEmpty()){
+                        client1Cubes.push(hopCubesTC.pop());
+                        cubesToAdd++;
+                    }
+                }
+
+                hopTC = 'mountain';
+            }
+
+            while (cubesToAdd > 0){
+                hopCubesTC.push(hopCubes.pop());
+            }
+        }
+    }
+
+    function addCardHop (client1Stack, client2Stack, idClient, parsedMessage, side){
+        var ownStack;
+        var vsStack;
+        var msg_toClient;
+        var hand;
+        var cardIndex;
+
+        if (idClient == clientsData['idClient1']){
+            ownStack = client1Stack;
+            vsStack = client2Stack;
+            hand = client1Hand;
+
+        } else {
+            ownStack = client2Stack;
+            vsStack = client1Stack;
+            hand = client2Hand;
+        }
+
+        cardIndex = hand.indexOf(parseInt(parsedMessage.arg2));
+
+        if (cardIndex < 0){
+            msg_toClient = 'Bad argument. Card doesnt exist';
+
+            clientsList[idClient].sendMSGClient(msg_toClient);
+
+        } else {
+
+            if (cardDeck == 0) {
+                while (!discardDeck.isEmpty()) {
+                    cardDeck.push(discardDeck.pop())
+                }
+                shuffle(cardDeck)
+            }
+
+            if (side){
+                ownStack.push(hand[cardIndex]);
+            } else {
+                vsStack.push(hand[cardIndex]);
+            }
+
+            hand.push(cardDeck.pop());
+            delete hand[cardIndex];
+        }
     }
 
     this.sendState = function sendState(idClient) {
@@ -140,6 +591,14 @@ function createMatch(matchID, clientsData){
         msg_toBroadcast = JSON.stringify({state: 'Hop 4 ' + clientsData['idClient1'] + ' side', arg1: hop4Client1Stack});
         this.broadcastMSG(msg_toBroadcast);
         msg_toBroadcast = JSON.stringify({state: 'Hop 4 ' + clientsData['idClient2'] + ' side', arg1: hop4Client2Stack});
+        this.broadcastMSG(msg_toBroadcast);
+
+        msg_toBroadcast = JSON.stringify({state: clientsData['idClient1'] + ' cubes', arg1: client1Cubes});
+        this.broadcastMSG(msg_toBroadcast);
+        msg_toBroadcast = JSON.stringify({state: clientsData['idClient2'] + ' cubes', arg1: client2Cubes});
+        this.broadcastMSG(msg_toBroadcast);
+
+        msg_toBroadcast = JSON.stringify({state: 'Trophies', arg1: trophies});
         this.broadcastMSG(msg_toBroadcast);
 
         msg_toBroadcast = JSON.stringify({state: clientsData['idClient1'] + ' trophies', arg1: client1Trophies});
@@ -216,7 +675,7 @@ function createMatch(matchID, clientsData){
     }
 
     this.closeAll = function (){
-        for (clt in clientsList){
+        for (var clt in clientsList){
             clientsList[clt].forceClose();
         }
     }
