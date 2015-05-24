@@ -133,6 +133,7 @@ function createMatch(matchID, clientsData){
                 var hopTCStack1;
                 var hopTCStack2;
                 var hopCubesTC;
+                var hopNum;
 
                 switch (parsedMessage.arg1.toLowerCase()){
                     case 'hop1jug':
@@ -141,6 +142,7 @@ function createMatch(matchID, clientsData){
                         hopTCStack1 = hop1Client1Stack;
                         hopTCStack2 = hop1Client2Stack;
                         hopCubesTC = hop1Cubes;
+                        hopNum = 1;
                         break;
                     case 'hop2jug':
                         addCardHop(hop2Client1Stack, hop2Client2Stack, idClient, parsedMessage, true);
@@ -148,13 +150,15 @@ function createMatch(matchID, clientsData){
                         hopTCStack1 = hop2Client1Stack;
                         hopTCStack2 = hop2Client2Stack;
                         hopCubesTC = hop2Cubes;
+                        hopNum = 2;
                         break;
                     case 'hop3jug':
                         addCardHop(hop3Client1Stack, hop3Client2Stack, idClient, parsedMessage, true);
                         hopTC = hop3;
                         hopTCStack1 = hop3Client1Stack;
                         hopTCStack2 = hop3Client2Stack;
-                        hopCubesTC = hop3Cubes;
+                        hopCubesTC = hop3Cubes
+                        hopNum = 3;
                         break;
                     case 'hop4jug':
                         addCardHop(hop4Client1Stack, hop4Client2Stack, idClient, parsedMessage, true);
@@ -162,6 +166,7 @@ function createMatch(matchID, clientsData){
                         hopTCStack1 = hop4Client1Stack;
                         hopTCStack2 = hop4Client2Stack;
                         hopCubesTC = hop4Cubes;
+                        hopNum = 4;
                         break;
                     case 'hop1cont':
                         addCardHop(hop1Client1Stack, hop1Client2Stack, idClient, parsedMessage, false);
@@ -169,6 +174,7 @@ function createMatch(matchID, clientsData){
                         hopTCStack1 = hop1Client1Stack;
                         hopTCStack2 = hop1Client2Stack;
                         hopCubesTC = hop1Cubes;
+                        hopNum = 1;
                         break;
                     case 'hop2cont':
                         addCardHop(hop2Client1Stack, hop2Client2Stack, idClient, parsedMessage, false);
@@ -176,6 +182,7 @@ function createMatch(matchID, clientsData){
                         hopTCStack1 = hop2Client1Stack;
                         hopTCStack2 = hop2Client2Stack;
                         hopCubesTC = hop2Cubes;
+                        hopNum = 2;
                         break;
                     case 'hop3cont':
                         addCardHop(hop3Client1Stack, hop3Client2Stack, idClient, parsedMessage, false);
@@ -183,6 +190,7 @@ function createMatch(matchID, clientsData){
                         hopTCStack1 = hop3Client1Stack;
                         hopTCStack2 = hop3Client2Stack;
                         hopCubesTC = hop3Cubes;
+                        hopNum = 3;
                         break;
                     case 'hop4cont':
                         addCardHop(hop4Client1Stack, hop4Client2Stack, idClient, parsedMessage, false);
@@ -190,11 +198,12 @@ function createMatch(matchID, clientsData){
                         hopTCStack1 = hop4Client1Stack;
                         hopTCStack2 = hop4Client2Stack;
                         hopCubesTC = hop4Cubes;
+                        hopNum = 4;
                         break;
                     default: break;
                 }
 
-                checkHop(hopCubesTC, hopTCStack1, hopTCStack2, hopTC);
+                checkHop(hopCubesTC, hopTCStack1, hopTCStack2, hopTC, hopNum);
 
                 checkCubes();
 
@@ -444,7 +453,7 @@ function createMatch(matchID, clientsData){
         }
     }
 
-    function checkHop(hopCubesTC, hopTCStack1, hopTCStack2, hopTC){
+    function checkHop(hopCubesTC, hopTCStack1, hopTCStack2, hopTC, hopNum){
         var red = 0, yellow = 0, gray = 0, blue = 0;
         var redTemp, yellowTemp, grayTemp, blueTemp;
         var sumPlayer1 = 0;
@@ -528,7 +537,13 @@ function createMatch(matchID, clientsData){
                     }
                 }
 
-                hopTC = 'flatland';
+                switch (hopNum) {
+                    case 1: hop1 = 'flatland'; break;
+                    case 2: hop2 = 'flatland'; break;
+                    case 3: hop3 = 'flatland'; break;
+                    case 4: hop4 = 'flatland'; break;
+                    default: break;
+                }
 
             } else {
                 if (sumPlayer1 >= sumPlayer2){
@@ -544,7 +559,13 @@ function createMatch(matchID, clientsData){
                     }
                 }
 
-                hopTC = 'mountain';
+                switch (hopNum) {
+                    case 1: hop1 = 'mountain'; break;
+                    case 2: hop2 = 'mountain'; break;
+                    case 3: hop3 = 'mountain'; break;
+                    case 4: hop4 = 'mountain'; break;
+                    default: break;
+                }
             }
 
             while (cubesToAdd > 0){
