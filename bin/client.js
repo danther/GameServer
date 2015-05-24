@@ -84,6 +84,7 @@ function clientMain(connection, idClient, match, tokenClient){
             case "close": myMatch.broadcastMSG(JSON.stringify({ response: idClient + ' left the match'}));
                 connection.close(); break;
             case "play": myMatch.actualize(message, idClient); break;
+            case "echo": myMatch.sendState();
             default: break;
         }
     }

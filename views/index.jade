@@ -38,6 +38,7 @@ html
         $("#chatInput").val('');
         logged = false;
         socketFunction = new connect();
+        setTimeout(sendEcho, 500);
       }
 
       /**
@@ -79,17 +80,15 @@ html
         $("#chatInput").val('');
       }
 
-      //DEPRECATED
       // Ensure the format of echo-type messages
-      function sendEcho(option) {
-        var msg_toSend = JSON.stringify({command: option})
+      function sendEcho() {
+        var msg_toSend = JSON.stringify({command: 'echo'})
         socketFunction.sendMSG(msg_toSend);
-        $("#chatInput").val('');
       }
 
       function sendCardCommand(option) {
         var cardNum = $("#cardNumber option:selected").text();
-        var msg_toSend = JSON.stringify({command: option, arg1: cardNum})
+        var msg_toSend = JSON.stringify({command: "play", arg1: option, arg2: cardNum})
         socketFunction.sendMSG(msg_toSend);
       }
 
@@ -109,8 +108,8 @@ html
 
       // Main function to manage connection with the server
       function connect(){
-        var ws = new WebSocket("ws://game05dad.azurewebsites.net", 'playgame' );
-        //var ws = new WebSocket("ws://localhost", 'playgame' );
+        //var ws = new WebSocket("ws://game05dad.azurewebsites.net", 'playgame' );
+        var ws = new WebSocket("ws://localhost", 'playgame' );
 
         this.sendMSG = function (msg){
           ws.send(msg);
