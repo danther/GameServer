@@ -5,9 +5,9 @@ var router = express.Router();
 router.get('/', function(req, res, next) {
   if (isEmpty(req.query)){
     res.writeHead(302, {"Location": "http://localhost:8080/docs"});
+
     res.end();
 
-    //res.render('route', { title: 'Swagger Doc' });
   } else {
     res.render('index', { title: 'Grupo 05' });
   }

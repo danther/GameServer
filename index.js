@@ -32,7 +32,7 @@ swaggerTools.initializeMiddleware(swaggerDoc, function (middleware) {
 
   // Start the server
   http.createServer(app).listen(8080, function () {
-    console.log('Your server is listening on port %d (http://localhost:%d)', 8080, 8080);
-    console.log('Swagger-ui is available on http://localhost:%d/docs', 8080);
+    console.log('Your server is listening on port %d (http://game05dadazurewebsites.net:%d)', 8080, 8080);
+    console.log('Swagger-ui is available on http://game05dadazurewebsites.net:%d/docs', 8080);
   });
 });
