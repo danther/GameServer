@@ -4,7 +4,7 @@ var router = express.Router();
 /* GET client page */
 router.get('/', function(req, res, next) {
   if (isEmpty(req.query)){
-    res.writeHead(302, {"Location": "https://game05daddoc.azure-api.net/docs"});
+    res.writeHead(302, {"Location": "https://game05daddocu.azurewebsites.net/docs/"});
 
     res.end();
 
