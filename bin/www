@@ -23,7 +23,7 @@ var server = http.createServer(app);
 var wsMain = require('./websocket.js');
 var wsServer = wsMain.createWS(server);
 
-var swaggerUI = require('./../index.js');
+//var swaggerUI = require('./../index.js');
 
 /**
  * Listen on provided port, on all network interfaces.
