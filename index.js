@@ -14,7 +14,7 @@ var options = {
 };
 
 // The Swagger document (require it, build it programmatically, fetch it from a URL, ...)
-var swaggerDoc = require('./api/swagger.json');
+var swaggerDoc = require('./bin/api/swagger.json');
 
 // Initialize the Swagger middleware
 swaggerTools.initializeMiddleware(swaggerDoc, function (middleware) {
