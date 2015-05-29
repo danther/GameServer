@@ -117,10 +117,6 @@ function createMatch(matchID, clientsData){
         clientsList[clientsData["idClient1"]].setToPlay();
         clientsList[clientsData["idClient2"]].setToPlay();
 
-        client1Trophies.push('red');
-        client1Trophies.push('blue');
-        client1Trophies.push('gray');
-
         this.sendState();
         this.sendGameRegistry(Date.now());
     }
