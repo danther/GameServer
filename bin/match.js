@@ -117,6 +117,10 @@ function createMatch(matchID, clientsData){
         clientsList[clientsData["idClient1"]].setToPlay();
         clientsList[clientsData["idClient2"]].setToPlay();
 
+        client1Trophies.push('red');
+        client1Trophies.push('blue');
+        client1Trophies.push('gray');
+
         this.sendState();
         this.sendGameRegistry(Date.now());
     }
@@ -759,7 +763,6 @@ function createMatch(matchID, clientsData){
     };
 
     this.sendGameRegistry = function sendGameRegistry(dateEnd) {
-        Console.log("Starting registry");
         var post_options_client1 = {
             host: 'gameregistry.cloudapp.net',
             port: '80',
@@ -792,12 +795,12 @@ function createMatch(matchID, clientsData){
         var post_req_client1 = http.request(post_options_client1, function(res) {
             res.on('data', function (chunk) {
                 try {
-                    //var msg_parsed = JSON.parse(chunk);
-                    var idGameRegistry = chunk.body.id;
-                    Console.log(idGameRegistry);
+                    var msg_parsed = JSON.parse(chunk);
+                    var idGameRegistry = msg_parsed['id'];
+                    console.log('Id registry: ' + idGameRegistry);
                     gameRegistryID['1'] = idGameRegistry;
                 } catch (e) {
-                    Console.log(e);
+                    console.log(e);
                 }
             });
         });
@@ -808,12 +811,12 @@ function createMatch(matchID, clientsData){
         var post_req_client2 = http.request(post_options_client2, function(res) {
             res.on('data', function (chunk) {
                 try {
-                    //var msg_parsed = JSON.parse(chunk);
-                    var idGameRegistry = chunk.body.id;
-                    Console.log(idGameRegistry);
+                    var msg_parsed = JSON.parse(chunk);
+                    var idGameRegistry = msg_parsed['id'];
+                    console.log('Id registry: ' + idGameRegistry);
                     gameRegistryID['2'] = idGameRegistry;
                 } catch (e) {
-                    Console.log(e);
+                    console.log(e);
                 }
             });
         });
@@ -824,7 +827,62 @@ function createMatch(matchID, clientsData){
     }
 
     this.closeGameRegistry = function closeGameRegistry(dateEnd) {
+        var put_options_client1 = {
+            host: 'gameregistry.cloudapp.net',
+            port: '80',
+            path: '/api/v1/sessions/' + gameRegistryID['1'],
+            method: 'PUT',
+            headers: {
+                'gameregistry-user': clientsData['idClient1'],
+                'gameregistry-token': clientsData['tokenClient1'],
+                'id': gameRegistryID['1'],
+                'Content-Type': 'application/json'
+            }
+        };
 
+        var put_options_client2 = {
+            host: 'gameregistry.cloudapp.net',
+            port: '80',
+            path: '/api/v1/sessions/' + gameRegistryID['2'],
+            method: 'PUT',
+            headers: {
+                'gameregistry-user': clientsData['idClient2'],
+                'gameregistry-token': clientsData['tokenClient2'],
+                'id': gameRegistryID['2'],
+                'Content-Type': 'application/json'
+            }
+        };
+
+        var bodyMSG_client_1 = JSON.stringify({id: matchID, user: clientsData['idClient1'], game: 'Balloon Cup',
+            start: dateStart, end: dateEnd});
+        var bodyMSG_client_2 = JSON.stringify({id: matchID, user: clientsData['idClient2'], game: 'Balloon Cup',
+            start: dateStart, end: dateEnd});
+
+        var put_req_client1 = http.request(put_options_client1, function(res) {
+            res.on('data', function (chunk) {
+                try {
+                    console.log('Id ' + gameRegistryID['1'] + ' actualized');
+                } catch (e) {
+                    console.log(e);
+                }
+            });
+        });
+
+        put_req_client1.write(bodyMSG_client_1);
+        put_req_client1.end();
+
+        var put_req_client2 = http.request(put_options_client2, function(res) {
+            res.on('data', function (chunk) {
+                try {
+                    console.log('Id ' + gameRegistryID['2'] + ' actualized');
+                } catch (e) {
+                    console.log(e);
+                }
+            });
+        });
+
+        put_req_client2.write(bodyMSG_client_2);
+        put_req_client2.end();
     }
 
 }
