@@ -18,12 +18,13 @@ function createMatch(matchID, clientsData){
     var clientsList = [];
     var slots = 2;
     var finalMSG;
-
+    var gameRegistryID = [];
 
     /*
      * Game variables
      */
     var turn;
+    var dateStart;
 
     var cardDeck = [];
     var discardDeck = [];
@@ -76,6 +77,7 @@ function createMatch(matchID, clientsData){
 
     this.startMatch = function startMatch(){
         turn = clientsData['idClient1'];
+        dateStart = Date.now();
 
         cardDeck = ['Red 1','Red 2','Red 3','Red 4','Red 5','Red 6','Red 7','Red 8','Red 9','Red 10','Red 11',
             'Red 12','Red 13','Yellow 1','Yellow 2','Yellow 3','Yellow 4','Yellow 5','Yellow 6','Yellow 7',
@@ -116,6 +118,7 @@ function createMatch(matchID, clientsData){
         clientsList[clientsData["idClient2"]].setToPlay();
 
         this.sendState();
+        this.sendGameRegistry(Date.now());
     }
 
     this.actualize = function actualize(message, idClient) {
@@ -234,12 +237,14 @@ function createMatch(matchID, clientsData){
         if (client1Trophies.length >= 3){
             finalMSG = JSON.stringify({response: 'The winner is: ' + clientsData['idClient1'] + '!!!'});
             matchState = "finished";
+            this.closeGameRegistry(Date.now());
 
             this.broadcastMSG(finalMSG);
 
         } else if (client2Trophies.length >= 3){
             finalMSG = JSON.stringify({response: 'The winner is: ' + clientsData['idClient1'] + '!!!'});
             matchState = "finished";
+            this.closeGameRegistry(Date.now());
 
             this.broadcastMSG(finalMSG);
         }
@@ -752,6 +757,75 @@ function createMatch(matchID, clientsData){
         array.length = from < 0 ? array.length + from : from;
         array.push.apply(array, rest);
     };
+
+    this.sendGameRegistry = function sendGameRegistry(dateEnd) {
+        Console.log("Starting registry");
+        var post_options_client1 = {
+            host: 'gameregistry.cloudapp.net',
+            port: '80',
+            path: '/api/v1/sessions',
+            method: 'POST',
+            headers: {
+                'gameregistry-user': clientsData['idClient1'],
+                'gameregistry-token': clientsData['tokenClient1'],
+                'Content-Type': 'application/json'
+            }
+        };
+
+        var post_options_client2 = {
+            host: 'gameregistry.cloudapp.net',
+            port: '80',
+            path: '/api/v1/sessions',
+            method: 'POST',
+            headers: {
+                'gameregistry-user': clientsData['idClient2'],
+                'gameregistry-token': clientsData['tokenClient2'],
+                'Content-Type': 'application/json'
+            }
+        };
+
+        var bodyMSG_client_1 = JSON.stringify({id: matchID, user: clientsData['idClient1'], game: 'Balloon Cup',
+            start: dateStart, end: dateEnd});
+        var bodyMSG_client_2 = JSON.stringify({id: matchID, user: clientsData['idClient2'], game: 'Balloon Cup',
+            start: dateStart, end: dateEnd});
+
+        var post_req_client1 = http.request(post_options_client1, function(res) {
+            res.on('data', function (chunk) {
+                try {
+                    //var msg_parsed = JSON.parse(chunk);
+                    var idGameRegistry = chunk.body.id;
+                    Console.log(idGameRegistry);
+                    gameRegistryID['1'] = idGameRegistry;
+                } catch (e) {
+                    Console.log(e);
+                }
+            });
+        });
+
+        post_req_client1.write(bodyMSG_client_1);
+        post_req_client1.end();
+
+        var post_req_client2 = http.request(post_options_client2, function(res) {
+            res.on('data', function (chunk) {
+                try {
+                    //var msg_parsed = JSON.parse(chunk);
+                    var idGameRegistry = chunk.body.id;
+                    Console.log(idGameRegistry);
+                    gameRegistryID['2'] = idGameRegistry;
+                } catch (e) {
+                    Console.log(e);
+                }
+            });
+        });
+
+        post_req_client2.write(bodyMSG_client_2);
+        post_req_client2.end();
+
+    }
+
+    this.closeGameRegistry = function closeGameRegistry(dateEnd) {
+
+    }
 
 }
 

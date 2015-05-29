@@ -24,10 +24,10 @@ app.use(bodyParser.json());
 router.post('/', function(req, res, next) {
     var matchID = generateID();
 
-    var idClient1 = req.body. idClient1;
+    var idClient1 = req.body.idClient1;
     var tokenClient1 = req.body.tokenClient1;
 
-    var idClient2 = req.body. idClient2;
+    var idClient2 = req.body.idClient2;
     var tokenClient2 = req.body.tokenClient2;
 
     // Check for collision (improbable)
